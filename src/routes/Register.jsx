@@ -1,7 +1,17 @@
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { differenceInYears } from 'date-fns'
+import { useState } from 'react'
+
+import axios from '../utils/axios-instance'
 
 export function Register () {
+  const [loading, setLoading] = useState(false)
+  const [errs, setErrs] = useState([])
+  const [msg, setMsg] = useState('')
+
+  const navigate = useNavigate()
+
   const {
     register,
     handleSubmit,
@@ -10,7 +20,30 @@ export function Register () {
   } = useForm()
 
   async function onSubmit (data) {
-    console.table(data)
+    try {
+      setLoading(true)
+      const response = await axios.post('auth/register', data)
+      const { msg } = response.data
+
+      setMsg(msg)
+      setErrs([])
+
+      setTimeout(() => {
+        navigate('/check-in')
+      }, 1500)
+    } catch (error) {
+      console.error(error)
+      if (!error.response) {
+        return setErrs([
+          {
+            msg: 'An error occurred during sign up. Please try again later.'
+          }
+        ])
+      }
+      setErrs(error.response.data.errors)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const password = watch('password')
@@ -21,6 +54,22 @@ export function Register () {
       style={{ maxWidth: '720px' }}
     >
       <h2 className='text-center'>Register</h2>
+
+      {errs.length > 0 && (
+        <div className='alert alert-danger'>
+          <ul className='mb-0'>
+            {errs.map((err) => (
+              <li key={err.msg}>{err.msg}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {msg && (
+        <div className='alert alert-success' role='alert'>
+          {msg}
+        </div>
+      )}
 
       <form className='my-3' onSubmit={handleSubmit(onSubmit)}>
         <div className='mb-3 row row-cols-1 row-cols-md-3'>
@@ -123,7 +172,6 @@ export function Register () {
                 id='genderMale'
                 value='Male'
                 {...register('gender', { required: 'Gender is required' })}
-                checked
               />
               <label className='form-check-label' htmlFor='genderMale'>
                 Male
@@ -159,17 +207,11 @@ export function Register () {
                 required: 'Date of birth is required',
                 validate: {
                   minAge: (value) => {
-                    const today = new Date()
-                    const birthDate = new Date(value)
-                    const age = today.getFullYear() - birthDate.getFullYear()
-                    const month = today.getMonth() - birthDate.getMonth()
-                    if (
-                      month < 0 ||
-                      (month === 0 && today.getDate() < birthDate.getDate())
-                    ) {
-                      return 'You must be at least 13 years old'
-                    }
-                    return age >= 13 || 'You must be at least 13 years old'
+                    const age = differenceInYears(new Date(), new Date(value))
+                    return (
+                      (age >= 13 && age <= 24) ||
+                      'You must be between 14 and 24 years old'
+                    )
                   }
                 }
               })}
@@ -190,7 +232,7 @@ export function Register () {
                 required: 'Phone number is required',
                 pattern: {
                   value: /^(\+233|0)[2457][0-9]{8}$/,
-                  message: 'Please enter a valid Ghanaian phone number'
+                  message: 'Phone number must be a valid Ghanaian one'
                 }
               })}
             />
@@ -252,8 +294,8 @@ export function Register () {
             )}
           </div>
         </div>
-        <button type='submit' className='btn btn-primary'>
-          Register
+        <button type='submit' className='btn btn-primary' disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
       <p className='text-center'>
