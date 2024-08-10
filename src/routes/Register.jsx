@@ -18,6 +18,7 @@ export function Register () {
     formState: { errors },
     watch
   } = useForm()
+  const password = watch('password')
 
   async function onSubmit (data) {
     try {
@@ -45,8 +46,6 @@ export function Register () {
       setLoading(false)
     }
   }
-
-  const password = watch('password')
 
   return (
     <div
