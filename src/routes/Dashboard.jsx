@@ -55,13 +55,14 @@ export function Dashboard () {
 
   async function onSubmit (data) {
     try {
+      user && (data.userId = user._id)
       await axios.post('auth/check-out', data)
       setUser(null)
       localStorage.removeItem('token')
       navigate('/')
     } catch (error) {
       console.error(error)
-      setError('Failed to log out. Please try again.')
+      setError('Failed to check out. Please try again.')
     }
   }
 
@@ -98,7 +99,15 @@ export function Dashboard () {
       {user && (
         <div className='text-center'>
           <h3>
-            Welcome back, {user.firstName}. Happy {user.activity || 'learning'}!
+            Welcome back, {user.firstName}. Happy{' '}
+            {user.purpose === 'learn'
+              ? 'learning'
+              : user.purpose === 'research'
+                ? 'researching'
+                : user.purpose === 'explore'
+                  ? 'exploring'
+                  : 'learning'}
+            !
           </h3>
           <button
             type='button'

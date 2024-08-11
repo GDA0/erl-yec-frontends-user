@@ -169,7 +169,7 @@ export function Register () {
                 className='form-check-input'
                 type='radio'
                 id='genderMale'
-                value='Male'
+                value='male'
                 {...register('gender', { required: 'Gender is required' })}
               />
               <label className='form-check-label' htmlFor='genderMale'>
@@ -181,7 +181,7 @@ export function Register () {
                 className='form-check-input'
                 type='radio'
                 id='genderFemale'
-                value='Female'
+                value='female'
                 {...register('gender', { required: 'Gender is required' })}
               />
               <label className='form-check-label' htmlFor='genderFemale'>
