@@ -37,7 +37,7 @@ export function Register () {
       if (!error.response) {
         return setErrs([
           {
-            msg: 'An error occurred during sign up. Please try again later.'
+            msg: 'An error occurred during registration. Please try again later.'
           }
         ])
       }

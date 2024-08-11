@@ -1,6 +1,22 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useForm } from 'react-hook-form'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+
+import axios from '../utils/axios-instance'
+import { redirectTo } from '../utils/redirect-to'
 
 export function CheckIn () {
+  const navigate = useNavigate()
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    token && navigate(-1)
+  }, [navigate])
+
+  const [loading, setLoading] = useState(false)
+  const [errs, setErrs] = useState([])
+  const [msg, setMsg] = useState('')
+
   const {
     register,
     handleSubmit,
@@ -8,7 +24,31 @@ export function CheckIn () {
   } = useForm()
 
   async function onSubmit (data) {
-    console.log(data)
+    try {
+      setLoading(true)
+      const response = await axios.post('auth/check-in', data)
+      const { msg, token } = response.data
+
+      setMsg(msg)
+      localStorage.setItem('token', token)
+      setErrs([])
+
+      setTimeout(() => {
+        redirectTo('/')
+      }, 1500)
+    } catch (error) {
+      console.error(error)
+      if (!error.response) {
+        return setErrs([
+          {
+            msg: 'An error occurred during check-in. Please try again later.'
+          }
+        ])
+      }
+      setErrs(error.response.data.errors)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -17,6 +57,22 @@ export function CheckIn () {
       style={{ maxWidth: '720px' }}
     >
       <h2 className='text-center'>Check In</h2>
+
+      {errs.length > 0 && (
+        <div className='alert alert-danger'>
+          <ul className='mb-0'>
+            {errs.map((err) => (
+              <li key={err.msg}>{err.msg}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {msg && (
+        <div className='alert alert-success' role='alert'>
+          {msg}
+        </div>
+      )}
 
       <form className='my-3' onSubmit={handleSubmit(onSubmit)}>
         <div className='mb-3 row row-cols-1 row-cols-md-2'>
@@ -92,7 +148,12 @@ export function CheckIn () {
           <select
             className='form-select'
             id='purpose'
-            {...register('purpose', { required: 'Purpose is required' })}
+            {...register('purpose', {
+              required: 'Purpose is required',
+              validate: (value) =>
+                ['learn', 'research', 'explore'].includes(value) ||
+                'Invalid purpose selected'
+            })}
           >
             <option value='learn'>Learn</option>
             <option value='research'>Research</option>
@@ -102,10 +163,13 @@ export function CheckIn () {
             <span className='text-danger'>{errors.purpose.message}</span>
           )}
         </div>
-        <button type='submit' className='btn btn-primary'>
-          Check in
+        <button type='submit' className='btn btn-primary' disabled={loading}>
+          {loading ? 'Checking in...' : 'Check in'}
         </button>
       </form>
+      <p className='text-center'>
+        Don't have an account? <Link to='/register'>Register</Link>
+      </p>
     </div>
   )
 }
