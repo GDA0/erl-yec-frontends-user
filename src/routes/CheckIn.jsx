@@ -10,7 +10,7 @@ export function CheckIn () {
   const navigate = useNavigate()
   useEffect(() => {
     const token = localStorage.getItem('token')
-    token && navigate(-1)
+    token && navigate('/dashboard')
   }, [navigate])
 
   const [loading, setLoading] = useState(false)
@@ -34,7 +34,7 @@ export function CheckIn () {
       setErrs([])
 
       setTimeout(() => {
-        redirectTo('/')
+        redirectTo('/dashboard')
       }, 1500)
     } catch (error) {
       console.error(error)
